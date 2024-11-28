@@ -6,6 +6,10 @@ import (
 	"kuro/kurolang/internal/token"
 )
 
+const (
+    ErrorUnexpectedToken = "unexpected token type %s"
+)
+
 type Parser struct {
 	Tokens   []token.Token
 	Position int
@@ -25,10 +29,11 @@ func (p *Parser) addError(msg string) {
 
 func (p *Parser) Consume(expected_type string) (token.Token, error) {
 	token := p.CurrentToken()
+
 	if token.Type == expected_type {
-		p.Position++
-		return token, nil
-	}
+            p.Position++
+            return token, nil
+    }
 	err := fmt.Errorf("expected token type %s, got %s", expected_type, token.Type)
 	p.addError(err.Error())
 	return token, err
@@ -62,84 +67,102 @@ func (p *Parser) Parse() (ast.Assignment, ast.Node, error) {
 }
 
 func (p *Parser) ParseStatement() (ast.Assignment, ast.Node, error) {
-	if p.CurrentToken().Type == "VAR" {
-		assignment, err := p.ParseAssignment()
-		return assignment, ast.Number{Value: ""}, err
-	}
-	expr := p.ParseExpression()
-	return ast.Assignment{}, expr, nil
+   if p.LookAhead().Type == "OPERATOR" && p.LookAhead().Value == "=" {
+       value, err :=  p.ParseAssignment()
+       return value, nil, err
+    }else{
+        value,err := p.ParseExpression()
+        return ast.Assignment{}, value, err
+    }
 }
 
 func (p *Parser) ParseAssignment() (ast.Assignment, error) {
-	_, err := p.Consume("VAR")
+    identifier, err := p.Consume("IDENTIFIER")
 	if err != nil {
 		return ast.Assignment{}, err
 	}
 
-	identToken, err := p.Consume("IDENTIFIER")
+	_, err = p.Consume("OPERATOR")
 	if err != nil {
 		return ast.Assignment{}, err
 	}
 
-	_, err = p.Consume("ASSIGN")
-	if err != nil {
-		return ast.Assignment{}, err
-	}
-
-	value := p.ParseExpression()
-	return ast.Assignment{Identifier: identToken.Value, Value: value}, nil
+	value, err := p.ParseExpression()
+    if err != nil {
+        p.addError(err.Error())
+        return  ast.Assignment{}, err
+    }
+	return ast.Assignment{Identifier: identifier.Value, Value: value}, nil
 }
 
-func (p *Parser) ParseExpression() ast.Node {
-	left := p.ParseTerm()
-
-	for p.CurrentToken().Type == "PLUS" || p.CurrentToken().Type == "MINUS" {
-		operator := p.CurrentToken().Value
-		if p.CurrentToken().Type == "PLUS" {
-			p.Consume("PLUS")
-		} else {
-			p.Consume("MINUS")
-		}
-		right := p.ParseTerm()
-		left = ast.BinaryOperation{Operator: operator, Left: left, Right: right}
+func (p *Parser) ParseExpression() (ast.Node, error) {
+	left, err := p.ParseTerm()
+    if err != nil {
+        p.addError(err.Error())
+        return  ast.Number{Value: ""}, err
+    }
+	for p.CurrentToken().Value == "+" || p.CurrentToken().Value == "-" {
+		operator, err := p.Consume("OPERATOR")
+        if err != nil {
+            p.addError(err.Error())
+            return  ast.Number{Value: ""}, err
+        }
+		right, err := p.ParseTerm()
+        if err != nil {
+            p.addError(err.Error())
+            return  ast.Number{Value: ""}, err
+        }
+		left = ast.BinaryOperation{Operator: operator.Value, Left: left, Right: right}
 	}
 
-	return left
+	return left, nil
 }
 
-func (p *Parser) ParseTerm() ast.Node {
-	left := p.ParseFactor()
+func (p *Parser) ParseTerm() (ast.Node, error) {
+	left, err := p.ParseFactor()
+    if err != nil {
+        p.addError(err.Error())
+        return  ast.Number{Value: ""}, err
+    }
 
-	for p.CurrentToken().Type == "MULTIPLY" || p.CurrentToken().Type == "DIVIDE" {
-		operator := p.CurrentToken().Value
-		if p.CurrentToken().Type == "MULTIPLY" {
-			p.Consume("MULTIPLY")
-		} else {
-			p.Consume("DIVIDE")
-		}
-		right := p.ParseFactor()
-		left = ast.BinaryOperation{Operator: operator, Left: left, Right: right}
+	for p.CurrentToken().Value == "*" || p.CurrentToken().Value == "/" { 
+		operator, err := p.Consume("OPERATOR")
+        if err != nil {
+            p.addError(err.Error())
+        }   
+		right, err := p.ParseFactor()
+        if err != nil {
+            p.addError(err.Error())
+            return  ast.Number{Value: ""}, err
+        }
+		left = ast.BinaryOperation{Operator: operator.Value, Left: left, Right: right}
 	}
 
-	return left
+	return left, nil
 }
 
-func (p *Parser) ParseFactor() ast.Node {
+func (p *Parser) ParseFactor() (ast.Node,error) {
 	token := p.CurrentToken()
-	switch token.Type {
-	case "NUMBER":
-		p.Consume("NUMBER")
-		return ast.Number{Value: token.Value}
-	case "IDENTIFIER":
-		p.Consume("IDENTIFIER")
-		return ast.Identifier{Value: token.Value}
-	case "LPAREN":
-		p.Consume("LPAREN")
-		expr := p.ParseExpression()
-		p.Consume("RPAREN")
-		return expr
-	default:
-		p.addError(fmt.Sprintf("unexpected token %s", token.Type))
-		return ast.Number{Value: "0"}
-	}
+    if token.Type == "NUMBER" {
+        number, err :=  p.Consume("NUMBER")
+        if err != nil {
+            return ast.Number{Value: ""}, err
+        }
+        return ast.Number{Value: number.Value}, nil
+	}else if token.Type == "IDENTIFIER" {
+        identifier, err :=  p.Consume("IDENTIFIER")
+        if err != nil {
+            return ast.Identifier{Value: ""}, err
+        }
+        return ast.Identifier{Value: identifier.Value}, nil
+    } else if token.Value == "(" {
+        p.Consume("OPERATOR")
+        expr, err := p.ParseExpression()
+        if err != nil {
+            return ast.Number{Value: ""}, err
+        }
+        p.Consume("OPERATOR")
+        return expr, nil
+    }
+    return ast.Number{Value: ""}, fmt.Errorf(ErrorUnexpectedToken, token.Type)
 }

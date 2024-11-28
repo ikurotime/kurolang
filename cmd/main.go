@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	var x = "var x = 5 + 5;"
+	var x = "x = 5 + 5;"
 
 	// Tokenize the input
 	tokens, err := token.Tokenize(x)
