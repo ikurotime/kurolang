@@ -1,32 +1,29 @@
 package token
 
 import (
+	"fmt"
 	"regexp"
+)
+
+const (
+    // KEYWORDS
+    VAR = "var"
+    IDENTIFIER =  "[a-zA-Z]+"
+    NUMBER = "[0-9]+"
+    OPERATOR = "[+\\-*/=()]"
+    WHITESPACE = "\\s+"
+    MUST_COMPILE_REGEX = "[a-zA-Z]+|[0-9]+|[\\+\\-\\=\\;]"  
 )
 
 // String with regex patterns
 var TOKENS = map[string]string{
-	// KEYWORDS
-	"var": "VAR",
-	// IDENTIFIERS
-	"[a-zA-Z]+": "IDENTIFIER",
-	// LITERALS
-	"[0-9]+": "NUMBER",
-	// OPERATORS
-	"+": "PLUS",
-	"-": "MINUS",
-	"=": "ASSIGN",
-	";": "SEMICOLON",
-	// SYMBOLS
-	" ": "WHITESPACE",
-	//TODO- ADD PUNCTUATION
-	//"(": "LPAREN",
-	//")": "RPAREN",
-	//"{": "LBRACE",
-	//"}": "RBRACE",
-	//"[": "LBRACKET",
-	//"]": "RBRACKET",
+	VAR: "VAR",
+	IDENTIFIER: "IDENTIFIER",
+	NUMBER: "NUMBER",
+    OPERATOR : "OPERATOR",
+	WHITESPACE: "WHITESPACE",
 }
+
 
 // Token struct
 type Token struct {
@@ -41,7 +38,7 @@ func NewToken(tokenType string, tokenValue string) Token {
 
 func SplitStringWithRegex(input string) []string {
 	var result []string
-	re := regexp.MustCompile(`[a-zA-Z]+|[0-9]+|[\+\-\=\;]`)
+	re := regexp.MustCompile(MUST_COMPILE_REGEX)
 	result = re.FindAllString(input, -1)
 	return result
 }
@@ -69,38 +66,33 @@ func SplitString(input string) []string {
 func Tokenize(input string) ([]Token, error) {
 	var Tokens []Token
 	inputString := SplitStringWithRegex(input)
-	//   fmt.Printf("input tokens: %s\n",inputString)
+    fmt.Printf("input tokens: %s\n",inputString)
 	for _, token := range inputString {
 		switch token {
-		case "var":
-			Tokens = append(Tokens, NewToken(TOKENS["var"], token))
-			continue
-		case "+":
-			Tokens = append(Tokens, NewToken(TOKENS["+"], token))
-			continue
-		case "-":
-			Tokens = append(Tokens, NewToken(TOKENS["-"], token))
-			continue
-		case "=":
-			Tokens = append(Tokens, NewToken(TOKENS["="], token))
-			continue
-		case ";":
-			Tokens = append(Tokens, NewToken(TOKENS[";"], token))
+		case VAR:
+			Tokens = append(Tokens, NewToken(TOKENS[VAR], token))
 			continue
 		default:
-			identifier, err := regexp.MatchString("[a-zA-Z]+", token)
+			identifier, err := regexp.MatchString(IDENTIFIER, token)
 			if err != nil {
 				return nil, err
 			}
 			if identifier {
-				Tokens = append(Tokens, NewToken(TOKENS["[a-zA-Z]+"], token))
+				Tokens = append(Tokens, NewToken(TOKENS[IDENTIFIER], token))
 			}
-			integer, err := regexp.MatchString("[0-9]+", token)
+            operator, err := regexp.MatchString(OPERATOR, token)
+            if err != nil {
+                return nil, err
+            }
+            if operator {
+                Tokens = append(Tokens, NewToken(TOKENS[OPERATOR], token))
+            }
+			number, err := regexp.MatchString(NUMBER, token)
 			if err != nil {
 				return nil, err
 			}
-			if integer {
-				Tokens = append(Tokens, NewToken(TOKENS["[0-9]+"], token))
+			if number {
+				Tokens = append(Tokens, NewToken(TOKENS[NUMBER], token))
 			}
 		}
 	}
