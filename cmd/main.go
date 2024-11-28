@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"kuro/kurolang/internal/parser"
 	"kuro/kurolang/internal/token"
+	"strconv"
 )
 
 func main() {
@@ -16,7 +17,7 @@ func main() {
 	}
 	// Print the tokens
 	for _, token := range tokens {
-		fmt.Printf("Token: {%s,%s}\n", token.Type, token.Value)
+        fmt.Printf("Token: {%s,%s,%s}\n", token.Type, token.Value, strconv.Itoa(token.Position))
 	}
 
 	parser := parser.Parser{Tokens: tokens, Position: 0}

@@ -29,11 +29,12 @@ var TOKENS = map[string]string{
 type Token struct {
 	Type  string
 	Value string
+    Position int
 }
 
 // Token constructor
-func NewToken(tokenType string, tokenValue string) Token {
-	return Token{Type: tokenType, Value: tokenValue}
+func NewToken(tokenType string, tokenValue string, tokenPosition int) Token {
+    return Token{Type: tokenType, Value: tokenValue , Position: tokenPosition}
 }
 
 func SplitStringWithRegex(input string) []string {
@@ -65,12 +66,15 @@ func SplitString(input string) []string {
 // Tokenize the input
 func Tokenize(input string) ([]Token, error) {
 	var Tokens []Token
+    position := 0
+
 	inputString := SplitStringWithRegex(input)
     fmt.Printf("input tokens: %s\n",inputString)
 	for _, token := range inputString {
+        position++
 		switch token {
 		case VAR:
-			Tokens = append(Tokens, NewToken(TOKENS[VAR], token))
+			Tokens = append(Tokens, NewToken(TOKENS[VAR], token, position))
 			continue
 		default:
 			identifier, err := regexp.MatchString(IDENTIFIER, token)
@@ -78,21 +82,21 @@ func Tokenize(input string) ([]Token, error) {
 				return nil, err
 			}
 			if identifier {
-				Tokens = append(Tokens, NewToken(TOKENS[IDENTIFIER], token))
+				Tokens = append(Tokens, NewToken(TOKENS[IDENTIFIER], token, position))
 			}
             operator, err := regexp.MatchString(OPERATOR, token)
             if err != nil {
                 return nil, err
             }
             if operator {
-                Tokens = append(Tokens, NewToken(TOKENS[OPERATOR], token))
+                Tokens = append(Tokens, NewToken(TOKENS[OPERATOR], token, position))
             }
 			number, err := regexp.MatchString(NUMBER, token)
 			if err != nil {
 				return nil, err
 			}
 			if number {
-				Tokens = append(Tokens, NewToken(TOKENS[NUMBER], token))
+				Tokens = append(Tokens, NewToken(TOKENS[NUMBER], token, position))
 			}
 		}
 	}
