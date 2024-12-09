@@ -56,13 +56,56 @@ func TestTokens(t *testing.T) {
 	RunTests(tokens, tests, t)
 }
 
-// We can test lexer (and more inputs) like this intead of running main.go
-func TestVarAssignment(t *testing.T) {
+func TestLetAssignment(t *testing.T) {
 	input := `let x = 5 + 5;`
 
 	tests := []test{
 		{token.LET, "let"},
 		{token.IDENTIFIER, "x"},
+		{token.OPERATOR, "="},
+		{token.NUMBER, "5"},
+		{token.OPERATOR, "+"},
+		{token.NUMBER, "5"},
+		{token.SEMICOLON, ";"},
+	}
+
+	tokens, err := Tokenize(input)
+
+	if err != nil {
+		t.Fatalf("Error: %s", err)
+	}
+
+	RunTests(tokens, tests, t)
+}
+
+func TestConstAssignment(t *testing.T) {
+	input := `const x = 5 + 5;`
+
+	tests := []test{
+		{token.CONST, "const"},
+		{token.IDENTIFIER, "x"},
+		{token.OPERATOR, "="},
+		{token.NUMBER, "5"},
+		{token.OPERATOR, "+"},
+		{token.NUMBER, "5"},
+		{token.SEMICOLON, ";"},
+	}
+
+	tokens, err := Tokenize(input)
+
+	if err != nil {
+		t.Fatalf("Error: %s", err)
+	}
+
+	RunTests(tokens, tests, t)
+}
+
+func TestMultiAssignment(t *testing.T) {
+	input := `const myVariable = 5 + 5;`
+
+	tests := []test{
+		{token.CONST, "const"},
+		{token.IDENTIFIER, "myVariable"},
 		{token.OPERATOR, "="},
 		{token.NUMBER, "5"},
 		{token.OPERATOR, "+"},
