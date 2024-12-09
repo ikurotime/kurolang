@@ -48,6 +48,14 @@ func Tokenize(input string) ([]token.Token, error) {
 	inputString := SplitStringWithRegex(input)
 	fmt.Printf("input tokens: %s\n", inputString)
 
+	equals, err := regexp.Compile(token.EQUALS)
+	if err != nil {
+		return nil, err
+	}
+	comparison, err := regexp.Compile(token.COMPARISON)
+	if err != nil {
+		return nil, err
+	}
 	identifier, err := regexp.Compile(token.IDENTIFIER)
 	if err != nil {
 		return nil, err
@@ -62,18 +70,42 @@ func Tokenize(input string) ([]token.Token, error) {
 	}
 
 	for _, word := range inputString {
-		fmt.Printf("Token: %s\n", word)
-		if word == token.LET {
+		switch {
+		case word == token.CONST:
+			Tokens = append(Tokens, NewToken(token.CONST, word))
+		case word == token.LET:
 			Tokens = append(Tokens, NewToken(token.LET, word))
-		} else if identifier.MatchString(word) {
-			Tokens = append(Tokens, NewToken(token.IDENTIFIER, word))
-		} else if operator.MatchString(word) {
-			Tokens = append(Tokens, NewToken(token.OPERATOR, word))
-		} else if number.MatchString(word) {
-			Tokens = append(Tokens, NewToken(token.NUMBER, word))
-		} else if word == token.SEMICOLON {
+		case word == token.IF:
+			Tokens = append(Tokens, NewToken(token.IF, word))
+		case word == token.ELSE:
+			Tokens = append(Tokens, NewToken(token.ELSE, word))
+		case word == token.ELSEIF:
+			Tokens = append(Tokens, NewToken(token.ELSEIF, word))
+		case word == token.LBRACKET:
+			Tokens = append(Tokens, NewToken(token.LBRACKET, word))
+		case word == token.RBRACKET:
+			Tokens = append(Tokens, NewToken(token.RBRACKET, word))
+		case word == token.TRUE:
+			Tokens = append(Tokens, NewToken(token.TRUE, word))
+		case word == token.FALSE:
+			Tokens = append(Tokens, NewToken(token.FALSE, word))
+		case word == token.SEMICOLON:
 			Tokens = append(Tokens, NewToken(token.SEMICOLON, word))
-		} else {
+		case word == token.TRUE:
+			Tokens = append(Tokens, NewToken(token.TRUE, word))
+		case word == token.FALSE:
+			Tokens = append(Tokens, NewToken(token.FALSE, word))
+		case comparison.MatchString(word):
+			Tokens = append(Tokens, NewToken(token.COMPARISON, word))
+		case identifier.MatchString(word):
+			Tokens = append(Tokens, NewToken(token.IDENTIFIER, word))
+		case equals.MatchString(word):
+			Tokens = append(Tokens, NewToken(token.EQUALS, word))
+		case operator.MatchString(word):
+			Tokens = append(Tokens, NewToken(token.OPERATOR, word))
+		case number.MatchString(word):
+			Tokens = append(Tokens, NewToken(token.NUMBER, word))
+		default:
 			return nil, fmt.Errorf(ErrorInvalidToken, word)
 		}
 	}

@@ -6,19 +6,20 @@ const (
 	LET                = "let"
 	IDENTIFIER         = "[a-zA-Z]+"
 	NUMBER             = "[0-9]+"
-	OPERATOR           = "[+\\-*/=()]"
+	OPERATOR           = "[+\\-*/=]"
+	COMPARISON         = "[><=!]=|[><]"
+	EQUALS             = "=="
 	WHITESPACE         = "\\s+"
 	SEMICOLON          = ";"
-	MUST_COMPILE_REGEX = "[a-zA-Z]+|[0-9]+|[\\+\\-\\=\\;]"
+	MUST_COMPILE_REGEX = "[a-zA-Z]+|[0-9]+|[><=!]=|[><]|[+\\-*/=;{}]"
+	IF                 = "if"
+	ELSE               = "else"
+	ELSEIF             = "else if"
+	TRUE               = "true"
+	FALSE              = "false"
+	LBRACKET           = "{"
+	RBRACKET           = "}"
 )
-
-var TOKENS = map[string]string{
-	IDENTIFIER: "IDENTIFIER",
-	NUMBER:     "NUMBER",
-	OPERATOR:   "OPERATOR",
-	SEMICOLON:  "SEMICOLON",
-	WHITESPACE: "WHITESPACE",
-}
 
 // Token struct
 type Token struct {
